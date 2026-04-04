@@ -42,8 +42,6 @@ log/
 *.pth
 *.pt
 *.onnx
-checkpoints/
-weights/
 
 # =========================
 
@@ -51,7 +49,6 @@ weights/
 
 # =========================
 
-logs/
 *.log
 *.out
 

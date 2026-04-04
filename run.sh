@@ -51,7 +51,7 @@ echo "[3/3] Launching Imitation Learning Dashboard..."
 # Navigate to the IL directory
 cd "$ROOT_DIR/imitation_learning" || { echo "Error: imitation_learning directory not found"; exit 1; }
 
-streamlit run main.py &
+streamlit run app.py &
 PID_STREAMLIT=$!
 
 echo "================================================"
