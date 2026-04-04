@@ -11,6 +11,29 @@ echo "================================================"
 echo "[1/2] Navigating to skid_hardware_ws..."
 cd "$ROOT_DIR/skid_hardware_ws" || { echo "Error: skid_hardware_ws directory not found"; exit 1; }
 
+# --- STEP 1.5: CHECK EXISTING BUILD ---
+# Check if any of the build artifacts already exist
+if [ -d "build" ] || [ -d "install" ] || [ -d "log" ]; then
+    echo "------------------------------------------------"
+    echo "[!] Existing build directories found."
+    
+    # Prompt the user for a decision
+    read -p "Do you want to clean old files and rebuild? (y/N): " choice
+    
+    case "$choice" in 
+        y|Y )
+            echo "Cleaning old build, install, and log directories..."
+            rm -rf build install log
+            echo "Cleaned successfully."
+            echo "------------------------------------------------"
+            ;;
+        * )
+            echo "Build skipped. Exiting."
+            exit 0
+            ;;
+    esac
+fi
+
 # --- STEP 2: BUILD WORKSPACE ---
 echo "[2/2] Running colcon build..."
 # Note: Limited to 1 worker to prevent freezing on systems with limited RAM
