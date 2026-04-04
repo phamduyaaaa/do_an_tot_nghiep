@@ -1,0 +1,15 @@
+vận tốc: 0.5 m/s
+
+Tiêu chí obscale avoidance
+	navigation safety
+	realtime responsiveness
+	computational load
+	robustness
+	
+Tiêu chí path planning:
+	completeness
+	optimality
+	scalability
+	computation time
+	adaptability to dynamic env
+	
