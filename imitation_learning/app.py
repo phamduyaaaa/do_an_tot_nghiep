@@ -163,7 +163,8 @@ def main():
         epochs = st.number_input("Epochs:", min_value=1, value=50, key="plot_epochs")
         
         out_path = f"checkpoints/{out_model_name}"
-        expected_plot_path = out_path.replace(".pth", "_loss.png")
+        base_name = out_model_name.replace(".pth", "")
+        expected_plot_path = f"plots/{base_name}_loss.png"
 
         if st.button("Train & Generate Plot", type="primary"):
             cmd = f"python scripts/train_plot.py --data {selected_data} --output {out_path} --epochs {epochs}"
