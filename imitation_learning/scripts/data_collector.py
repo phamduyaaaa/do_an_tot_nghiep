@@ -96,7 +96,7 @@ def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--downsample', type=int, default=180)
     parser.add_argument('--rate', type=int, default=20)
-    parser.add_argument('--out', type=str, default=f'dataset_{now_str}.csv')
+    parser.add_argument('--out', type=str, default=f'data/dataset_{now_str}.csv')
     parser.add_argument('--max_range', type=float, default=3.5)
     parsed, _ = parser.parse_known_args()
 
