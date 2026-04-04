@@ -95,7 +95,7 @@ def main():
         out_path = f"logs/{out_name}"
         
         if st.button("Start Collection", type="primary"):
-            cmd = f"python scripts/data_collector.py --out {out_path} --downsample {downsample} --rate {rate} --max_range {max_range}"
+            cmd = f"python3 scripts/data_collector.py --out {out_path} --downsample {downsample} --rate {rate} --max_range {max_range}"
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
@@ -115,7 +115,7 @@ def main():
         out_path = f"logs/{out_name}"
 
         if st.button("Start DAgger", type="primary"):
-            cmd = f"python scripts/data_collector_DAgger.py --out {out_path} --danger_dist {danger_dist} --cooldown {cooldown} --rate {rate}"
+            cmd = f"python3 scripts/data_collector_DAgger.py --out {out_path} --danger_dist {danger_dist} --cooldown {cooldown} --rate {rate}"
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
@@ -144,7 +144,7 @@ def main():
         out_path = f"checkpoints/{out_model_name}"
 
         if st.button("Start Training", type="primary"):
-            cmd = f"python scripts/train.py --data {selected_data} --output {out_path} --epochs {epochs} --batch {batch} --lr {lr} --input_dim {input_dim}"
+            cmd = f"python3 scripts/train.py --data {selected_data} --output {out_path} --epochs {epochs} --batch {batch} --lr {lr} --input_dim {input_dim}"
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
@@ -167,7 +167,7 @@ def main():
         expected_plot_path = f"plots/{base_name}_loss.png"
 
         if st.button("Train & Generate Plot", type="primary"):
-            cmd = f"python scripts/train_plot.py --data {selected_data} --output {out_path} --epochs {epochs}"
+            cmd = f"python3 scripts/train_plot.py --data {selected_data} --output {out_path} --epochs {epochs}"
             run_script_realtime(cmd)
             
             if os.path.exists(expected_plot_path):
@@ -196,7 +196,7 @@ def main():
             rate = st.number_input("Rate (Hz):", value=20, key="inf_rate")
 
         if st.button("Start Inference", type="primary"):
-            cmd = f"python scripts/inference.py --model {selected_model} --downsample {downsample} --rate {rate}"
+            cmd = f"python3 scripts/inference.py --model {selected_model} --downsample {downsample} --rate {rate}"
             run_script_realtime(cmd)
 
 if __name__ == "__main__":
