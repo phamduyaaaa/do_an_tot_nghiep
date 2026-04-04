@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="low_control" exec="kinematic" name="kinematic">
+        <param name="input_topic" value='cmd_vel'/>
+        <param name="output_topic" value="kine_to_ZLA8015D"/>
+        <param name="khoang_cach_banh" value="0.47"/>
+        <param name="r_banh" value="0.1"/>
+    </node>
+    <node pkg="low_control" exec="ZLA8015D_pub" name="ZLA8015D_pub">
+        <param name="input_topic" value="kine_to_ZLA8015D" />
+        <param name="output_topic" value="wheel_data" />
+        <param name="output_topic_left" value="wheel_data_left" />
+        <param name="output_topic_right" value="wheel_data_right" />
+    </node>
+</launch>
