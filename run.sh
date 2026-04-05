@@ -1,19 +1,17 @@
 #!/bin/bash
 
-# Get the current working directory
-ROOT_DIR=$(pwd)
+# Get the absolute root directory
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- FUNCTION: STOP ALL PROCESSES ---
 stop_all() {
     echo ""
     echo "[INFO] Sweeping and force-killing all spawned processes..."
     
-    # 1. Force kill the specific ROS and Streamlit processes
     pkill -9 -f "micro_ros_agent" 2>/dev/null
     pkill -9 -f "bringup.launch.py" 2>/dev/null
     pkill -9 -f "streamlit" 2>/dev/null
     
-    # 2. Release the serial port completely
     fuser -k -9 /dev/ttyUSB0 >/dev/null 2>&1
     
     sleep 1 
@@ -22,14 +20,13 @@ stop_all() {
 # --- FUNCTION: CLEANUP AND EXIT ---
 cleanup_and_exit() {
     stop_all
-    echo "Successfully closed! Exiting."
+    echo "[INFO] Successfully closed! Exiting."
     exit 0
 }
 trap cleanup_and_exit INT TERM
 
 # --- FUNCTION: START THE SYSTEM ---
 start_system() {
-    # Create a unique timestamped folder for this specific run
     SESSION_TIME=$(date +"%Y-%m-%d_%H-%M-%S")
     LOG_DIR="$ROOT_DIR/run_logs/$SESSION_TIME"
     mkdir -p "$LOG_DIR"
@@ -39,90 +36,103 @@ start_system() {
     echo "Session Logs: run_logs/$SESSION_TIME/"
     echo "================================================"
 
-    # --- STEP 1: SETUP WORKSPACE ---
-    echo "[1/3] Checking skid_hardware_ws workspace..."
-    cd "$ROOT_DIR/skid_hardware_ws" || { echo "Error: skid_hardware_ws directory not found"; exit 1; }
+    USE_TERMINATOR=false
+    if command -v terminator >/dev/null 2>&1; then
+        echo "[INFO] Terminator detected!"
+        USE_TERMINATOR=true
+    else
+        echo "[WARNING] Terminator not found. Using gnome-terminal."
+    fi
+
+    # --- FIND APP ---
+    if [ -f "$ROOT_DIR/imitation_learning/app.py" ]; then
+        APP_DIR="$ROOT_DIR/imitation_learning"
+    elif [ -f "$ROOT_DIR/app.py" ]; then
+        APP_DIR="$ROOT_DIR"
+    else
+        echo "[ERROR] app.py not found!"
+        exit 1
+    fi
+
+    APP_FILE="$APP_DIR/app.py"
+
+    # --- STEP 1 ---
+    echo ""
+    echo "[1/3] Checking workspace..."
+    cd "$ROOT_DIR/skid_hardware_ws" || exit 1
 
     if [ ! -d "install" ]; then
-        echo "'install' directory not found. Starting build process..."
         colcon build --parallel-workers 1 --cmake-args -DCMAKE_BUILD_PARALLEL_LEVEL=1
     fi
+
     source install/setup.bash
 
-    # --- STEP 2: LAUNCH ROS 2 (SEPARATE TERMINALS) ---
-    echo "[2/3] Launching Micro-ROS Agent and Bringup in new windows..."
+    # --- COMMANDS (FIXED) ---
+    CMD_AGENT="cd '$ROOT_DIR/skid_hardware_ws'; source install/setup.bash; ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 2>&1 | tee '$LOG_DIR/agent.log'; exec bash"
+
+    CMD_BRINGUP="cd '$ROOT_DIR/skid_hardware_ws'; source install/setup.bash; ros2 launch bringup bringup.launch.py 2>&1 | tee '$LOG_DIR/bringup.log'; exec bash"
+
+    # 🔥 FIX CHÍNH Ở ĐÂY
+    CMD_STREAMLIT="export PYTHONPATH='$APP_DIR':\$PYTHONPATH; \
+    cd '$APP_DIR'; \
+    python3 -c \"import os; os.chdir('$APP_DIR'); import subprocess; subprocess.run(['streamlit','run','$APP_FILE'])\" \
+    2>&1 | tee '$LOG_DIR/streamlit.log'; exec bash"
+
+    # --- STEP 2 ---
+    echo ""
+    echo "[2/3] Launching ROS2..."
 
     fuser -k /dev/ttyUSB0 >/dev/null 2>&1
 
-    # Spawn Terminal 1: Micro-ROS Agent (Log saved via 'tee')
-    echo "      -> Spawning Agent Terminal..."
-    gnome-terminal --title="Micro-ROS Agent" -- bash -c "ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 2>&1 | tee '$LOG_DIR/agent.log'"
-    
-    # Wait 2 seconds for the Agent to initialize
-    sleep 2 
-
-    # Spawn Terminal 2: Bringup Launch
-    echo "      -> Spawning Bringup Terminal..."
-    gnome-terminal --title="Bringup Node" -- bash -c "ros2 launch bringup bringup.launch.py 2>&1 | tee '$LOG_DIR/bringup.log'"
+    if [ "$USE_TERMINATOR" = true ]; then
+        terminator -T "Micro-ROS Agent" -x bash -ic "$CMD_AGENT" &
+        sleep 2
+        terminator --new-tab -T "Bringup" -x bash -ic "$CMD_BRINGUP" &
+    else
+        gnome-terminal --title="Micro-ROS Agent" -- bash -ic "$CMD_AGENT" &
+        sleep 2
+        gnome-terminal --title="Bringup" -- bash -ic "$CMD_BRINGUP" &
+    fi
 
     sleep 2
 
-    # --- STEP 3: LAUNCH STREAMLIT GUI ---
+    # --- STEP 3 ---
     echo ""
     echo "------------------------------------------------"
-    while true; do
-        read -p "[?] Proceed to launch the Streamlit GUI? (y/n) -> " confirm_gui
-        case "$confirm_gui" in 
-            y|Y )
-                echo "[3/3] Launching Imitation Learning Dashboard..."
-                cd "$ROOT_DIR/imitation_learning" || { echo "Error: imitation_learning directory not found"; exit 1; }
-                
-                # Spawn Terminal 3: Streamlit
-                echo "      -> Spawning Streamlit Terminal..."
-                gnome-terminal --title="IL Dashboard (Streamlit)" -- bash -c "streamlit run app.py 2>&1 | tee '$LOG_DIR/streamlit.log'"
-                break
-                ;;
-            n|N )
-                echo "[INFO] Skipping Streamlit GUI launch."
-                break
-                ;;
-            * )
-                echo "Invalid input. Please enter 'y' or 'n'."
-                ;;
-        esac
-    done
+    read -p "[?] Launch Streamlit GUI? (y/n) -> " confirm_gui
+
+    if [[ "$confirm_gui" =~ ^[Yy]$ ]]; then
+        echo "[3/3] Launching GUI..."
+
+        if [ "$USE_TERMINATOR" = true ]; then
+            terminator --new-tab -T "Streamlit" -x bash -ic "$CMD_STREAMLIT" &
+        else
+            gnome-terminal --title="Streamlit" -- bash -ic "$CMD_STREAMLIT" &
+        fi
+    else
+        echo "[INFO] Skipped GUI."
+    fi
 
     echo "================================================"
-    echo "DONE! System initialization complete."
+    echo "DONE!"
     echo "================================================"
 }
 
-# --- MAIN EXECUTION FLOW ---
-
+# --- MAIN ---
 start_system
 
-# Interactive control loop
 while true; do
     echo ""
-    echo "------------------------------------------------"
-    echo "COMMAND MENU:"
-    echo " [r] Type 'r' + Enter to RESET the system"
-    echo " [q] Type 'q' + Enter (or Ctrl+C) to QUIT"
-    echo "------------------------------------------------"
-    
-    read -p "Choose an option: " choice
+    echo "[r] Reset | [q] Quit"
+    read -p "Choose: " choice
     
     case "$choice" in 
         r|R )
-            echo "[!] Reset command received. Restarting..."
             stop_all
             start_system
             ;;
         q|Q )
             cleanup_and_exit
-            ;;
-        * )
-            echo "Invalid option. Please type 'r' or 'q'."
             ;;
     esac
 done
