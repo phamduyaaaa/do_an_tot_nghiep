@@ -125,7 +125,7 @@ def main():
         st.write("Train the Policy Network using collected logs.")
         
         # Scan for datasets
-        datasets = get_files("logs", ".csv")
+        datasets = get_files("data", ".csv")
         if not datasets:
             st.warning("No CSV datasets found in the `logs/` directory.")
             return
@@ -153,7 +153,7 @@ def main():
     elif choice == "4. Train & Plot Loss":
         st.write("Train the model and generate a Mean Squared Error (MSE) loss curve.")
         
-        datasets = get_files("logs", ".csv")
+        datasets = get_files("data", ".csv")
         if not datasets:
             st.warning("No CSV datasets found in the `logs/` directory.")
             return
