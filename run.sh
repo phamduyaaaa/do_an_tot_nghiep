@@ -1,24 +1,25 @@
 #!/bin/bash
 
-# Get the current working directory to ensure absolute paths
+# Get the current working directory
 ROOT_DIR=$(pwd)
-
-# Initialize process ID variables
-PID_AGENT=""
-PID_BRINGUP=""
-PID_STREAMLIT=""
 
 # --- FUNCTION: STOP ALL PROCESSES ---
 stop_all() {
     echo ""
-    echo "[INFO] Stopping current processes..."
-    # Suppress error output if processes are already dead
-    kill $PID_AGENT $PID_BRINGUP $PID_STREAMLIT 2>/dev/null
-    sleep 1 # Give processes a moment to shut down gracefully
+    echo "[INFO] Sweeping and force-killing all spawned processes..."
+    
+    # 1. Force kill the specific ROS and Streamlit processes
+    pkill -9 -f "micro_ros_agent" 2>/dev/null
+    pkill -9 -f "bringup.launch.py" 2>/dev/null
+    pkill -9 -f "streamlit" 2>/dev/null
+    
+    # 2. Release the serial port completely
+    fuser -k -9 /dev/ttyUSB0 >/dev/null 2>&1
+    
+    sleep 1 
 }
 
 # --- FUNCTION: CLEANUP AND EXIT ---
-# Catch Ctrl+C to safely kill background processes and exit the terminal
 cleanup_and_exit() {
     stop_all
     echo "Successfully closed! Exiting."
@@ -28,8 +29,14 @@ trap cleanup_and_exit INT TERM
 
 # --- FUNCTION: START THE SYSTEM ---
 start_system() {
+    # Create a unique timestamped folder for this specific run
+    SESSION_TIME=$(date +"%Y-%m-%d_%H-%M-%S")
+    LOG_DIR="$ROOT_DIR/run_logs/$SESSION_TIME"
+    mkdir -p "$LOG_DIR"
+
     echo "================================================"
     echo "STARTING ROBOTICS SYSTEM & IL DASHBOARD"
+    echo "Session Logs: run_logs/$SESSION_TIME/"
     echo "================================================"
 
     # --- STEP 1: SETUP WORKSPACE ---
@@ -42,40 +49,59 @@ start_system() {
     fi
     source install/setup.bash
 
-    # --- STEP 2: LAUNCH ROS 2 (BACKGROUND) ---
-    echo "[2/3] Launching Micro-ROS Agent and Bringup..."
+    # --- STEP 2: LAUNCH ROS 2 (SEPARATE TERMINALS) ---
+    echo "[2/3] Launching Micro-ROS Agent and Bringup in new windows..."
 
-    # Kill any process currently using the USB port (hide standard output/error)
     fuser -k /dev/ttyUSB0 >/dev/null 2>&1
 
-    ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 &
-    PID_AGENT=$!
-
+    # Spawn Terminal 1: Micro-ROS Agent (Log saved via 'tee')
+    echo "      -> Spawning Agent Terminal..."
+    gnome-terminal --title="Micro-ROS Agent" -- bash -c "ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 2>&1 | tee '$LOG_DIR/agent.log'"
+    
     # Wait 2 seconds for the Agent to initialize
     sleep 2 
 
-    ros2 launch bringup bringup.launch.py &
-    PID_BRINGUP=$!
+    # Spawn Terminal 2: Bringup Launch
+    echo "      -> Spawning Bringup Terminal..."
+    gnome-terminal --title="Bringup Node" -- bash -c "ros2 launch bringup bringup.launch.py 2>&1 | tee '$LOG_DIR/bringup.log'"
+
+    sleep 2
 
     # --- STEP 3: LAUNCH STREAMLIT GUI ---
-    echo "[3/3] Launching Imitation Learning Dashboard..."
-
-    cd "$ROOT_DIR/imitation_learning" || { echo "Error: imitation_learning directory not found"; exit 1; }
-
-    streamlit run app.py &
-    PID_STREAMLIT=$!
+    echo ""
+    echo "------------------------------------------------"
+    while true; do
+        read -p "[?] Proceed to launch the Streamlit GUI? (y/n) -> " confirm_gui
+        case "$confirm_gui" in 
+            y|Y )
+                echo "[3/3] Launching Imitation Learning Dashboard..."
+                cd "$ROOT_DIR/imitation_learning" || { echo "Error: imitation_learning directory not found"; exit 1; }
+                
+                # Spawn Terminal 3: Streamlit
+                echo "      -> Spawning Streamlit Terminal..."
+                gnome-terminal --title="IL Dashboard (Streamlit)" -- bash -c "streamlit run app.py 2>&1 | tee '$LOG_DIR/streamlit.log'"
+                break
+                ;;
+            n|N )
+                echo "[INFO] Skipping Streamlit GUI launch."
+                break
+                ;;
+            * )
+                echo "Invalid input. Please enter 'y' or 'n'."
+                ;;
+        esac
+    done
 
     echo "================================================"
-    echo "DONE! System is up and running."
+    echo "DONE! System initialization complete."
     echo "================================================"
 }
 
 # --- MAIN EXECUTION FLOW ---
 
-# 1. Start the system for the first time
 start_system
 
-# 2. Interactive control loop (Replaces the 'wait' command)
+# Interactive control loop
 while true; do
     echo ""
     echo "------------------------------------------------"
@@ -84,7 +110,6 @@ while true; do
     echo " [q] Type 'q' + Enter (or Ctrl+C) to QUIT"
     echo "------------------------------------------------"
     
-    # Wait for user input
     read -p "Choose an option: " choice
     
     case "$choice" in 

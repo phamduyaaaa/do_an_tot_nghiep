@@ -25,7 +25,7 @@ import torch
 import os
 import sys
 import threading
-from model import PolicyNet
+from models.model import PolicyNet
 
 
 def clamp_scan(ranges: list, max_range: float = 3.5) -> np.ndarray:

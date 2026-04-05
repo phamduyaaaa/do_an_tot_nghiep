@@ -23,7 +23,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
 import torch.optim as optim
-from model import PolicyNet
+from models.model import PolicyNet
 import os
 import sys
 
