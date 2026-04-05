@@ -24,7 +24,7 @@ st.set_page_config(
 
 # --- DIRECTORY SETUP ---
 # Ensure required directories exist to prevent errors
-for folder in ['logs', 'checkpoints', 'plots']:
+for folder in ['data', 'checkpoints', 'plots']:
     os.makedirs(folder, exist_ok=True)
 
 # --- UTILS ---
@@ -34,7 +34,6 @@ def get_files(directory, extension):
     for root, _, filenames in os.walk(directory):
         for f in filenames:
             if f.endswith(extension):
-                # Replace backslashes for Windows compatibility
                 files.append(os.path.join(root, f).replace('\\', '/'))
     return files
 
@@ -82,7 +81,7 @@ def main():
     # 1. NORMAL DATA COLLECTION
     # ---------------------------------------------------------
     if choice == "1. Data Collection":
-        st.write("Collect expert demonstrations (Behavior Cloning).")
+        st.write("Collect expert demonstrations (Behavior Cloning dataset).")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -92,7 +91,7 @@ def main():
             rate = st.number_input("Rate (Hz):", value=20)
             max_range = st.number_input("Max Range (m):", value=3.5)
             
-        out_path = f"logs/{out_name}"
+        out_path = f"data/{out_name}"
         
         if st.button("Start Collection", type="primary"):
             cmd = f"python3 -m scripts.data_collector --out {out_path} --downsample {downsample} --rate {rate} --max_range {max_range}"
@@ -102,7 +101,7 @@ def main():
     # 2. DAGGER DATA COLLECTION
     # ---------------------------------------------------------
     elif choice == "2. DAgger Collection":
-        st.write("Collect data only when the robot is near obstacles (DAgger-lite).")
+        st.write("Collect dataset using DAgger (focus near obstacles).")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -112,7 +111,7 @@ def main():
             cooldown = st.number_input("Cooldown steps:", value=5)
             rate = st.number_input("Rate (Hz):", value=20)
             
-        out_path = f"logs/{out_name}"
+        out_path = f"data/{out_name}"
 
         if st.button("Start DAgger", type="primary"):
             cmd = f"python3 -m scripts.data_collector_DAgger --out {out_path} --danger_dist {danger_dist} --cooldown {cooldown} --rate {rate}"
@@ -122,12 +121,11 @@ def main():
     # 3. TRAIN MODEL
     # ---------------------------------------------------------
     elif choice == "3. Train Model":
-        st.write("Train the Policy Network using collected logs.")
+        st.write("Train the Policy Network using collected datasets.")
         
-        # Scan for datasets
         datasets = get_files("data", ".csv")
         if not datasets:
-            st.warning("No CSV datasets found in the `logs/` directory.")
+            st.warning("No CSV datasets found in the `data/` directory.")
             return
             
         selected_data = st.selectbox("Select Dataset:", datasets)
@@ -155,7 +153,7 @@ def main():
         
         datasets = get_files("data", ".csv")
         if not datasets:
-            st.warning("No CSV datasets found in the `logs/` directory.")
+            st.warning("No CSV datasets found in the `data/` directory.")
             return
             
         selected_data = st.selectbox("Select Dataset:", datasets, key="plot_data")
@@ -181,7 +179,6 @@ def main():
     elif choice == "5. Inference":
         st.write("Run the trained policy on the robot/simulation.")
         
-        # Scan for models
         models = get_files("checkpoints", ".pth")
         if not models:
             st.warning("No .pth models found in the `checkpoints/` directory.")
