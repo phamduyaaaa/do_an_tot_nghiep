@@ -72,7 +72,6 @@ start_system() {
 
     CMD_BRINGUP="cd '$ROOT_DIR/skid_hardware_ws'; source install/setup.bash; ros2 launch bringup bringup.launch.py 2>&1 | tee '$LOG_DIR/bringup.log'; exec bash"
 
-    # 🔥 FIX CHÍNH Ở ĐÂY
     CMD_STREAMLIT="export PYTHONPATH='$APP_DIR':\$PYTHONPATH; \
     cd '$APP_DIR'; \
     python3 -c \"import os; os.chdir('$APP_DIR'); import subprocess; subprocess.run(['streamlit','run','$APP_FILE'])\" \
