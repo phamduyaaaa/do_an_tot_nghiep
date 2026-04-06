@@ -22,20 +22,22 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- DIRECTORY SETUP ---
-# Ensure required directories exist to prevent errors
+# --- DIRECTORY SETUP (FIXED) ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 for folder in ['data', 'checkpoints', 'plots']:
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, folder), exist_ok=True)
 
 # --- UTILS ---
 def get_files(directory, extension):
     """Recursively finds all files with a specific extension in a directory."""
     files = []
-    for root, _, filenames in os.walk(directory):
+    full_dir = os.path.join(BASE_DIR, directory)
+    for root, _, filenames in os.walk(full_dir):
         for f in filenames:
             if f.endswith(extension):
-                files.append(os.path.join(root, f).replace('\\', '/'))
-    return files
+                files.append(f)
+    return sorted(files)
 
 def run_script_realtime(command):
     """Executes a terminal command and displays output in real-time."""
@@ -50,7 +52,8 @@ def run_script_realtime(command):
             stdout=subprocess.PIPE, 
             stderr=subprocess.STDOUT, 
             text=True,
-            bufsize=1
+            bufsize=1,
+            cwd=BASE_DIR
         )
 
         for line in process.stdout:
@@ -94,7 +97,8 @@ def main():
         out_path = f"data/{out_name}"
         
         if st.button("Start Collection", type="primary"):
-            cmd = f"python3 -m scripts.data_collector --out {out_path} --downsample {downsample} --rate {rate} --max_range {max_range}"
+            # Bổ sung -u vào python3
+            cmd = f"python3 -u -m scripts.data_collector --out '{out_path}' --downsample {downsample} --rate {rate} --max_range {max_range}"
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
@@ -114,7 +118,8 @@ def main():
         out_path = f"data/{out_name}"
 
         if st.button("Start DAgger", type="primary"):
-            cmd = f"python3 -m scripts.data_collector_DAgger --out {out_path} --danger_dist {danger_dist} --cooldown {cooldown} --rate {rate}"
+            # Bổ sung -u vào python3
+            cmd = f"python3 -u -m scripts.data_collector_DAgger --out '{out_path}' --danger_dist {danger_dist} --cooldown {cooldown} --rate {rate}"
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
@@ -139,10 +144,12 @@ def main():
             lr = st.number_input("Learning Rate:", format="%.5f", value=0.001, step=0.0001)
             input_dim = st.number_input("Input Dimension:", value=180)
             
+        selected_data_path = f"data/{selected_data}"
         out_path = f"checkpoints/{out_model_name}"
 
         if st.button("Start Training", type="primary"):
-            cmd = f"python3 -m scripts.train --data {selected_data} --output {out_path} --epochs {epochs} --batch {batch} --lr {lr} --input_dim {input_dim}"
+            # Bổ sung -u vào python3
+            cmd = f"python3 -u -m scripts.train --data '{selected_data_path}' --output '{out_path}' --epochs {epochs} --batch {batch} --lr {lr} --input_dim {input_dim}"
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
@@ -160,16 +167,19 @@ def main():
         out_model_name = st.text_input("Save Model As:", value="bc_model_plot.pth", key="plot_model")
         epochs = st.number_input("Epochs:", min_value=1, value=50, key="plot_epochs")
         
+        selected_data_path = f"data/{selected_data}"
         out_path = f"checkpoints/{out_model_name}"
         base_name = out_model_name.replace(".pth", "")
         expected_plot_path = f"plots/{base_name}_loss.png"
 
         if st.button("Train & Generate Plot", type="primary"):
-            cmd = f"python3 -m scripts.train_plot --data {selected_data} --output {out_path} --epochs {epochs}"
+            # Bổ sung -u vào python3
+            cmd = f"python3 -u -m scripts.train_plot --data '{selected_data_path}' --output '{out_path}' --epochs {epochs}"
             run_script_realtime(cmd)
             
-            if os.path.exists(expected_plot_path):
-                st.image(expected_plot_path, caption="Training Loss Curve")
+            full_plot_path = os.path.join(BASE_DIR, expected_plot_path)
+            if os.path.exists(full_plot_path):
+                st.image(full_plot_path, caption="Training Loss Curve")
             else:
                 st.warning("Plot image not found.")
 
@@ -192,9 +202,21 @@ def main():
         with col2:
             rate = st.number_input("Rate (Hz):", value=20, key="inf_rate")
 
-        if st.button("Start Inference", type="primary"):
-            cmd = f"python3 -m scripts.inference --model {selected_model} --downsample {downsample} --rate {rate}"
-            run_script_realtime(cmd)
+        col_start, col_stop = st.columns(2)
+        
+        with col_start:
+            if st.button("Start Inference", type="primary"):
+                model_path = f"checkpoints/{selected_model}"
+                # Bổ sung -u vào python3 để force unbuffered stdout
+                cmd = f"python3 -u -m scripts.inference --model '{model_path}' --downsample {downsample} --rate {rate}"
+                run_script_realtime(cmd)
+
+        with col_stop:
+            if st.button("🛑 Stop Robot", type="primary"):
+                os.system("pkill -9 -f 'scripts.inference'")
+                stop_cmd = "ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'"
+                os.system(stop_cmd)
+                st.success("Inference stopped and cmd_vel set to 0.0")
 
 if __name__ == "__main__":
     main()
