@@ -22,8 +22,11 @@ bash build.sh
 # Step 3: If Step 2 is successful -> confirm to run Streamlit App (localhost)
 bash run.sh
 ```
-### NOTE: After run 2 .sh file, if not happen -> App Successfully!
-### Inference: Choose checkpoints/28-11_sanha10T2_slow.pth (this checkpoints can download in [Download checkpoint](https://github.com/phamduyaaaa/do_an_tot_nghiep/releases/tag/sanh_a10_t2_slow_28_11_25)
+### NOTE:
+#### If nothing happens after running the scripts, DO NOT assume success.
+#### Please check logs, ports, and device connections.
+### Inference:
+#### Choose checkpoints/28-11_sanha10T2_slow.pth (This checkpoints can download in [Download checkpoint](https://github.com/phamduyaaaa/do_an_tot_nghiep/releases/tag/sanh_a10_t2_slow_28_11_25)
 
 ## Project Information
 - **Author:** Pham Duc Duy
