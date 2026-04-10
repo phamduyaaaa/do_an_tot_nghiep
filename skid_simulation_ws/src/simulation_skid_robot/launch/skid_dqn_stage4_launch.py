@@ -1,25 +1,29 @@
 import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import (
+    IncludeLaunchDescription,
+    SetEnvironmentVariable,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+
 
 def generate_launch_description():
     pkg_name = 'simulation'
     bringup_dir = get_package_share_directory(pkg_name)
-    
-    urdf_file_name = 'skid_robot_v3.urdf' 
+
+    urdf_file_name = 'skid_robot_v3.urdf'
     urdf_path = os.path.join(bringup_dir, 'urdf', urdf_file_name)
-    
+
     tb3_gazebo_dir = get_package_share_directory('turtlebot3_gazebo')
     world_path = os.path.join(tb3_gazebo_dir, 'worlds', 'turtlebot3_dqn_stage4.world')
 
     install_dir = get_package_share_directory(pkg_name).split('/share')[0]
     gazebo_model_path = SetEnvironmentVariable(
         name='GAZEBO_MODEL_PATH',
-        value=[os.path.join(install_dir, 'share'), 
+        value=[os.path.join(install_dir, 'share'),
                ':', os.environ.get('GAZEBO_MODEL_PATH', '')]
     )
 
@@ -34,7 +38,7 @@ def generate_launch_description():
         }.items()
     )
 
-    with open(urdf_path, 'r') as infp:
+    with open(urdf_path) as infp:
         robot_desc = infp.read()
 
     robot_state_publisher = Node(
@@ -68,7 +72,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}],
         output='screen'
     )
-    
+
     return LaunchDescription([
         gazebo_model_path,
         gzserver,

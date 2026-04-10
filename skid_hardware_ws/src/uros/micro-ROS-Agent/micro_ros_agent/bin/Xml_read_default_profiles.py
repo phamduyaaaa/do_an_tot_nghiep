@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import sys
-import argparse
-import xml.etree.ElementTree
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),'..'))
 
 from micro_ros_agent import *
+
 
 def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(

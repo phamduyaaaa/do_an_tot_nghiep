@@ -32,8 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""
-usage: add_two_pt.py < calibration.yaml > calibration_two_pt.yaml.
+"""usage: add_two_pt.py < calibration.yaml > calibration_two_pt.yaml.
 
 In order to take into acount *HDL-64* correction_{x,y}, related to 2012 merge:
 https://github.com/ros-drivers/velodyne/commit/f30d68735c47312aa73d29203ddb16abc01357f4

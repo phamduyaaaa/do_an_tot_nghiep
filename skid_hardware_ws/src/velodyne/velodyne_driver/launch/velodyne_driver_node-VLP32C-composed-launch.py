@@ -35,12 +35,10 @@
 import os
 
 import ament_index_python.packages
-
+import yaml
 from launch import LaunchDescription
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
-
-import yaml
 
 
 def generate_launch_description():
@@ -48,7 +46,7 @@ def generate_launch_description():
         ament_index_python.packages.get_package_share_directory('velodyne_driver'),
         'config')
     param_config = os.path.join(config_directory, 'VLP32C-velodyne_driver_node-params.yaml')
-    with open(param_config, 'r') as f:
+    with open(param_config) as f:
         params = yaml.safe_load(f)['velodyne_driver_node']['ros__parameters']
     container = ComposableNodeContainer(
             name='velodyne_driver_container',

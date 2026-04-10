@@ -1,0 +1,56 @@
+[tool.ruff]
+# Google Python Style Guide strictly limits line length to 80 characters
+line-length = 80
+
+# The minimum Python version targeted by this project
+target-version = "py310"
+
+# Directories to exclude from linting and formatting
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+# Enable specific rule sets
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "D",   # pydocstyle (docstring conventions)
+    "UP",  # pyupgrade (syntax upgrade)
+    "B",   # flake8-bugbear (common bugs)
+]
+
+# Disable specific rules if necessary
+ignore = []
+
+# Allow autofix for all enabled rules (when `--fix` is passed)
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.pydocstyle]
+# Enforce Google-style docstrings
+convention = "google"
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+
+# Use spaces for indentation
+indent-style = "space"
+
+# Keep magic trailing commas to minimize git diffs
+skip-magic-trailing-comma = false
+
+# Auto-detect line endings based on the operating system
+line-ending = "auto"

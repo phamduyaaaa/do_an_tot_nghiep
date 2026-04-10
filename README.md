@@ -11,17 +11,18 @@ bash build.sh
 ```
 
 ```bash
-# Run the system in 3 steps:
+# Running the run.sh script (This is the only file you need to run):
+# AUTO:
+# 		Step 1: Check Terminator
+# 		- If available -> use Terminator
+# 		- Otherwise -> fallback to default Terminal
 
-# Step 1: Check Terminator
-# - If available -> use Terminator
-# - Otherwise -> fallback to default Terminal
+# 		Step 2: Launch skid_hardware_ws
 
-# Step 2: Launch skid_hardware_ws
-
-# Step 3: If Step 2 is successful -> confirm to run Streamlit App (localhost)
+# 		Step 3: If Step 2 is successful -> confirm to run Streamlit App (localhost)
 bash run.sh
 ```
+
 ### NOTE:
 #### If nothing happens after running the scripts, DO NOT assume success.
 #### Please check logs, ports, and device connections.
@@ -32,6 +33,6 @@ bash run.sh
 ## Project Information
 - **Author:** Pham Duc Duy
 - **Contact:** duypham.robotics@gmail.com
-- **Last updated:** 2026-04-06
+- **Last updated:** 2026-04-10
 
 

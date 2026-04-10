@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Twist
-from std_msgs.msg import Float64MultiArray
 import math
+
+import rclpy
+from geometry_msgs.msg import Twist
+from rclpy.node import Node
+from std_msgs.msg import Float64MultiArray
+
 
 class KinematicNode(Node):
     def __init__(self):
@@ -31,7 +33,7 @@ class KinematicNode(Node):
         )
 
         self.msg = Float64MultiArray()
-        self.get_logger().info(f"Kinematic Node Started")
+        self.get_logger().info("Kinematic Node Started")
 
     def gioi_han(self, a):
         if a >= 300:
@@ -59,8 +61,8 @@ class KinematicNode(Node):
 
         self.pub.publish(self.msg)
 
-def main(args=None):    
-    
+def main(args=None):
+
     rclpy.init(args=args)
 
     node = KinematicNode()

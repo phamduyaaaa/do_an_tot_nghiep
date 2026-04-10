@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import Float64MultiArray
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Quaternion, TransformStamped
-from tf_transformations import quaternion_from_euler
-from tf2_ros import TransformBroadcaster
 import math
+
+import rclpy
+from geometry_msgs.msg import Quaternion, TransformStamped
+from nav_msgs.msg import Odometry
+from rclpy.node import Node
+from sensor_msgs.msg import Imu
+from std_msgs.msg import Float64MultiArray
+from tf2_ros import TransformBroadcaster
+from tf_transformations import quaternion_from_euler
+
 
 class EncoderIMUToOdomNode(Node):
     def __init__(self):
@@ -54,7 +56,7 @@ class EncoderIMUToOdomNode(Node):
 
         # Transform Broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
-        
+
         ## THAY ĐỔI: Tạo một Timer để gọi hàm update_odom một cách định kỳ
         self.timer = self.create_timer(1.0 / frequency, self.update_odom)
 
@@ -77,9 +79,9 @@ class EncoderIMUToOdomNode(Node):
 
         ## THAY ĐỔI: Sửa lỗi logic. Lấy trung bình RPM từ hai kênh của driver.
         self.left_rpm = (rpm1 - rpm2) / 2.0
-        
+
         ## THAY ĐỔI: XÓA LỆNH GỌI self.update_odom() KHỎI CALLBACK
-        
+
     def right_wheel_callback(self, msg):
         if len(msg.data) != 2:
             self.get_logger().warn("Right wheel data must have exactly two values.")
@@ -92,10 +94,10 @@ class EncoderIMUToOdomNode(Node):
         if abs(rpm1) > 500 or abs(rpm2) > 500: # Giới hạn an toàn
             # self.get_logger().warn(f"Right wheel RPM too large: {rpm1}, {rpm2}")
             return
-            
+
         ## THAY ĐỔI: Sửa lỗi logic. Lấy trung bình RPM từ hai kênh của driver.
         self.right_rpm = (rpm1 - rpm2) / 2.0
-        
+
         ## THAY ĐỔI: XÓA LỆNH GỌI self.update_odom() KHỎI CALLBACK
 
     def imu_callback(self, msg):
@@ -109,17 +111,17 @@ class EncoderIMUToOdomNode(Node):
 
         # Tính toán vận tốc tuyến tính và góc quay
         linear_velocity = (left_velocity + right_velocity) / 2.0
-        
+
         ## LƯU Ý: Vẫn đang dùng yaw_rate từ IMU. Nếu bạn muốn dùng từ encoder, hãy bỏ comment dòng dưới
         ## và comment dòng "angular_velocity = self.yaw_rate"
-        # angular_velocity = (right_velocity - left_velocity) / self.khoang_cach_banh 
+        # angular_velocity = (right_velocity - left_velocity) / self.khoang_cach_banh
         angular_velocity = self.yaw_rate
 
         # Tính toán thời gian delta
         current_time = self.get_clock().now()
         dt = (current_time - self.last_time).nanoseconds / 1e9
         self.last_time = current_time
-        
+
         # Nếu dt quá lớn (ví dụ: lần đầu chạy hoặc hệ thống bị treo), bỏ qua để tránh cú nhảy lớn
         self.get_logger().warn(f"Thoi gian cap nhat: {dt}.")
 

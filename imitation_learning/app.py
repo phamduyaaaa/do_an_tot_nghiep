@@ -1,81 +1,95 @@
-"""
-================================================================================
-Imitation Learning Control Panel (Streamlit Web UI)
+"""Imitation Learning Control Panel (Streamlit Web UI).
 
-* Purpose: Centralized dashboard to manage data collection, training, and 
-           inference for the robotics behavior cloning pipeline.
-* Inputs:  Hyperparameters and file paths configured via the UI.
-* Outputs: Real-time execution logs, saved models, and metric plots.
-* Usage:   Run `streamlit run app.py` in the terminal.
-================================================================================
+Purpose: Centralized dashboard to manage data collection, training, and
+         inference for the robotics behavior cloning pipeline.
+Inputs:  Hyperparameters and file paths configured via the UI.
+Outputs: Real-time execution logs, saved models, and metric plots.
+Usage:   Run `streamlit run app.py` in the terminal.
 """
+
+import os
+import subprocess
 
 import streamlit as st
-import subprocess
-import os
-import glob
 
 # --- PAGE CONFIG ---
-st.set_page_config(
-    page_title="Do an tot nghiep", 
-    page_icon="🤖", 
-    layout="wide"
-)
+st.set_page_config(page_title="Do an tot nghiep", page_icon="🤖", layout="wide")
 
 # --- DIRECTORY SETUP (FIXED) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-for folder in ['data', 'checkpoints', 'plots']:
+for folder in ["data", "checkpoints", "plots"]:
     os.makedirs(os.path.join(BASE_DIR, folder), exist_ok=True)
 
-# --- UTILS ---
-def get_files(directory, extension):
-    """Recursively finds all files with a specific extension in a directory."""
+
+def get_files(directory: str, extension: str) -> list[str]:
+    """Recursively finds all files with a specific extension in a directory.
+
+    Args:
+        directory: The target directory to search in (relative to BASE_DIR).
+        extension: The file extension to filter by (e.g., ".csv").
+
+    Returns:
+        A sorted list of matching filenames.
+    """
     files = []
     full_dir = os.path.join(BASE_DIR, directory)
-    for root, _, filenames in os.walk(full_dir):
+    for _, _, filenames in os.walk(full_dir):
         for f in filenames:
             if f.endswith(extension):
                 files.append(f)
     return sorted(files)
 
-def run_script_realtime(command):
-    """Executes a terminal command and displays output in real-time."""
+
+def run_script_realtime(command: str) -> None:
+    """Executes a terminal command and displays output in real-time.
+
+    Args:
+        command: The shell command string to execute.
+    """
     st.info(f"Running command: `{command}`")
     log_container = st.empty()
     logs = ""
-    
+
     try:
         process = subprocess.Popen(
-            command, 
-            shell=True, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.STDOUT, 
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
-            cwd=BASE_DIR
+            cwd=BASE_DIR,
         )
 
-        for line in process.stdout:
-            logs += line
-            log_container.code(logs, language="bash")
-            
+        if process.stdout is not None:
+            for line in process.stdout:
+                logs += line
+                log_container.code(logs, language="bash")
+
         process.wait()
-        
+
         if process.returncode == 0:
             st.success("Process completed successfully!")
         else:
             st.error(f"Process failed (Exit code: {process.returncode})")
-            
+
     except Exception as e:
         st.error(f"Execution error: {e}")
 
-# --- MAIN APP ---
-def main():
+
+def main() -> None:
+    """Runs the main Streamlit application workflow."""
     st.sidebar.title("IL Control Panel")
     st.sidebar.markdown("---")
-    
-    menu = ["1. Data Collection", "2. DAgger Collection", "3. Train Model", "4. Train & Plot Loss", "5. Inference"]
+
+    menu = [
+        "1. Data Collection",
+        "2. DAgger Collection",
+        "3. Train Model",
+        "4. Train & Plot Loss",
+        "5. Inference",
+    ]
     choice = st.sidebar.radio("Select Workflow:", menu)
 
     st.title(choice)
@@ -85,7 +99,7 @@ def main():
     # ---------------------------------------------------------
     if choice == "1. Data Collection":
         st.write("Collect expert demonstrations (Behavior Cloning dataset).")
-        
+
         col1, col2 = st.columns(2)
         with col1:
             out_name = st.text_input("Output File Name:", value="dataset.csv")
@@ -93,12 +107,15 @@ def main():
         with col2:
             rate = st.number_input("Rate (Hz):", value=20)
             max_range = st.number_input("Max Range (m):", value=3.5)
-            
+
         out_path = f"data/{out_name}"
-        
+
         if st.button("Start Collection", type="primary"):
-            # Bổ sung -u vào python3
-            cmd = f"python3 -u -m scripts.data_collector --out '{out_path}' --downsample {downsample} --rate {rate} --max_range {max_range}"
+            cmd = (
+                f"python3 -u -m scripts.data_collector --out '{out_path}' "
+                f"--downsample {downsample} --rate {rate} "
+                f"--max_range {max_range}"
+            )
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
@@ -106,20 +123,27 @@ def main():
     # ---------------------------------------------------------
     elif choice == "2. DAgger Collection":
         st.write("Collect dataset using DAgger (focus near obstacles).")
-        
+
         col1, col2 = st.columns(2)
         with col1:
-            out_name = st.text_input("Output File Name:", value="dagger_dataset.csv")
-            danger_dist = st.number_input("Danger Distance (m):", value=0.6, step=0.1)
+            out_name = st.text_input(
+                "Output File Name:", value="dagger_dataset.csv"
+            )
+            danger_dist = st.number_input(
+                "Danger Distance (m):", value=0.6, step=0.1
+            )
         with col2:
             cooldown = st.number_input("Cooldown steps:", value=5)
             rate = st.number_input("Rate (Hz):", value=20)
-            
+
         out_path = f"data/{out_name}"
 
         if st.button("Start DAgger", type="primary"):
-            # Bổ sung -u vào python3
-            cmd = f"python3 -u -m scripts.data_collector_DAgger --out '{out_path}' --danger_dist {danger_dist} --cooldown {cooldown} --rate {rate}"
+            cmd = (
+                f"python3 -u -m scripts.data_collector_DAgger "
+                f"--out '{out_path}' --danger_dist {danger_dist} "
+                f"--cooldown {cooldown} --rate {rate}"
+            )
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
@@ -127,56 +151,70 @@ def main():
     # ---------------------------------------------------------
     elif choice == "3. Train Model":
         st.write("Train the Policy Network using collected datasets.")
-        
+
         datasets = get_files("data", ".csv")
         if not datasets:
             st.warning("No CSV datasets found in the `data/` directory.")
             return
-            
+
         selected_data = st.selectbox("Select Dataset:", datasets)
         out_model_name = st.text_input("Save Model As:", value="bc_model.pth")
-        
+
         col1, col2 = st.columns(2)
         with col1:
             epochs = st.number_input("Epochs:", min_value=1, value=100)
             batch = st.selectbox("Batch Size:", [16, 32, 64, 128], index=2)
         with col2:
-            lr = st.number_input("Learning Rate:", format="%.5f", value=0.001, step=0.0001)
+            lr = st.number_input(
+                "Learning Rate:", format="%.5f", value=0.001, step=0.0001
+            )
             input_dim = st.number_input("Input Dimension:", value=180)
-            
+
         selected_data_path = f"data/{selected_data}"
         out_path = f"checkpoints/{out_model_name}"
 
         if st.button("Start Training", type="primary"):
-            # Bổ sung -u vào python3
-            cmd = f"python3 -u -m scripts.train --data '{selected_data_path}' --output '{out_path}' --epochs {epochs} --batch {batch} --lr {lr} --input_dim {input_dim}"
+            cmd = (
+                f"python3 -u -m scripts.train --data '{selected_data_path}' "
+                f"--output '{out_path}' --epochs {epochs} --batch {batch} "
+                f"--lr {lr} --input_dim {input_dim}"
+            )
             run_script_realtime(cmd)
 
     # ---------------------------------------------------------
     # 4. TRAIN & PLOT LOSS
     # ---------------------------------------------------------
     elif choice == "4. Train & Plot Loss":
-        st.write("Train the model and generate a Mean Squared Error (MSE) loss curve.")
-        
+        st.write("Train the model and generate a Mean Squared Error curve.")
+
         datasets = get_files("data", ".csv")
         if not datasets:
             st.warning("No CSV datasets found in the `data/` directory.")
             return
-            
-        selected_data = st.selectbox("Select Dataset:", datasets, key="plot_data")
-        out_model_name = st.text_input("Save Model As:", value="bc_model_plot.pth", key="plot_model")
-        epochs = st.number_input("Epochs:", min_value=1, value=50, key="plot_epochs")
-        
+
+        selected_data = st.selectbox(
+            "Select Dataset:", datasets, key="plot_data"
+        )
+        out_model_name = st.text_input(
+            "Save Model As:", value="bc_model_plot.pth", key="plot_model"
+        )
+        epochs = st.number_input(
+            "Epochs:", min_value=1, value=50, key="plot_epochs"
+        )
+
         selected_data_path = f"data/{selected_data}"
         out_path = f"checkpoints/{out_model_name}"
         base_name = out_model_name.replace(".pth", "")
         expected_plot_path = f"plots/{base_name}_loss.png"
 
         if st.button("Train & Generate Plot", type="primary"):
-            # Bổ sung -u vào python3
-            cmd = f"python3 -u -m scripts.train_plot --data '{selected_data_path}' --output '{out_path}' --epochs {epochs}"
+            cmd = (
+                f"python3 -u -m scripts.train_plot "
+                f"--data '{selected_data_path}' --output '{out_path}' "
+                f"--epochs {epochs}"
+            )
             run_script_realtime(cmd)
-            
+
             full_plot_path = os.path.join(BASE_DIR, expected_plot_path)
             if os.path.exists(full_plot_path):
                 st.image(full_plot_path, caption="Training Loss Curve")
@@ -188,33 +226,41 @@ def main():
     # ---------------------------------------------------------
     elif choice == "5. Inference":
         st.write("Run the trained policy on the robot/simulation.")
-        
+
         models = get_files("checkpoints", ".pth")
         if not models:
             st.warning("No .pth models found in the `checkpoints/` directory.")
             return
-            
+
         selected_model = st.selectbox("Select Model:", models)
-        
+
         col1, col2 = st.columns(2)
         with col1:
-            downsample = st.number_input("Downsample size:", value=180, key="inf_ds")
+            downsample = st.number_input(
+                "Downsample size:", value=180, key="inf_ds"
+            )
         with col2:
             rate = st.number_input("Rate (Hz):", value=20, key="inf_rate")
 
         col_start, col_stop = st.columns(2)
-        
+
         with col_start:
             if st.button("Start Inference", type="primary"):
                 model_path = f"checkpoints/{selected_model}"
-                # Bổ sung -u vào python3 để force unbuffered stdout
-                cmd = f"python3 -u -m scripts.inference --model '{model_path}' --downsample {downsample} --rate {rate}"
+                cmd = (
+                    f"python3 -u -m scripts.inference --model '{model_path}' "
+                    f"--downsample {downsample} --rate {rate}"
+                )
                 run_script_realtime(cmd)
 
         with col_stop:
             if st.button("🛑 Stop Robot", type="primary"):
                 os.system("pkill -9 -f 'scripts.inference'")
-                stop_cmd = "ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'"
+                stop_cmd = (
+                    "ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "
+                    "'{linear: {x: 0.0, y: 0.0, z: 0.0}, "
+                    "angular: {x: 0.0, y: 0.0, z: 0.0}}'"
+                )
                 os.system(stop_cmd)
                 st.success("Inference stopped and cmd_vel set to 0.0")
 

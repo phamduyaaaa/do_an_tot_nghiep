@@ -109,7 +109,7 @@
 #             self.pub.publish(stand_data)
 #             self.pub_left.publish(feedback_left)
 #             self.pub_right.publish(feedback_right)
-        
+
 #         self.received_kine_data = False
 
 # def main(args=None):
@@ -128,12 +128,13 @@
 # if __name__ == '__main__':
 #     main()
 
+import numpy as np
+
 #!/usr/bin/env python3
 import rclpy
-from rclpy.node import Node
-import numpy as np
-from std_msgs.msg import Float64MultiArray
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+from rclpy.node import Node
+from std_msgs.msg import Float64MultiArray
 
 modbus_client = ModbusClient(method='rtu', port='/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A5069RR4-if00-port0', baudrate=115200, timeout=3)
 modbus_client.connect()
@@ -208,7 +209,7 @@ class ZLA8015DDriverNode(Node):
         set_velocity_mode(SLAVE_ID_R)
 
     def wheel_speed_callback(self, msg):
-        """ Callback khi nhận được dữ liệu từ topic kine_to_ZLA8015D """
+        """Callback khi nhận được dữ liệu từ topic kine_to_ZLA8015D"""
         if len(msg.data) == 2:
             left_speed = msg.data[0]
             right_speed = msg.data[1]
@@ -234,7 +235,7 @@ class ZLA8015DDriverNode(Node):
             self.pub_right.publish(feedback_right)
 
     def check_kine_timeout(self):
-        """ Nếu không nhận được dữ liệu từ topic kine_to_ZLA8015D, dừng robot """
+        """Nếu không nhận được dữ liệu từ topic kine_to_ZLA8015D, dừng robot"""
         if not self.received_kine_data:
             print("Không nhận được dữ liệu từ kine_to_ZLA8015D, dừng robot!")
 
@@ -248,7 +249,7 @@ class ZLA8015DDriverNode(Node):
             self.pub.publish(stand_data)
             self.pub_left.publish(feedback_left)
             self.pub_right.publish(feedback_right)
-        
+
         self.received_kine_data = False
 
 def main(args=None):

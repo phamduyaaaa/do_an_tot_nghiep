@@ -32,8 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Generate YAML calibration file from Velodyne db.xml.
+"""Generate YAML calibration file from Velodyne db.xml.
 
 The input data provided by the manufacturer are in degrees and
 centimeters. The YAML file uses radians and meters, following ROS
@@ -42,9 +41,9 @@ standards [REP-0103].
 """
 
 import math
-from optparse import OptionParser
 import os
 import sys
+from optparse import OptionParser
 from xml.etree import ElementTree
 
 import yaml
@@ -109,7 +108,7 @@ class GenCalibration:
 
         try:
             db = ElementTree.parse(self.xml_file)
-        except IOError:
+        except OSError:
             self.xml_error('unable to read ' + self.xml_file)
         except ElementTree.ParseError:
             self.xml_error('XML parse failed for ' + self.xml_file)

@@ -32,11 +32,11 @@
 """Launch the velodyne driver, pointcloud, and laserscan nodes with default configuration."""
 
 import os
-import yaml
 
 import ament_index_python.packages
 import launch
 import launch_ros.actions
+import yaml
 
 
 def generate_launch_description():
@@ -49,7 +49,7 @@ def generate_launch_description():
 
     convert_share_dir = ament_index_python.packages.get_package_share_directory('velodyne_pointcloud')
     convert_params_file = os.path.join(convert_share_dir, 'config', 'VLP16-velodyne_transform_node-params.yaml')
-    with open(convert_params_file, 'r') as f:
+    with open(convert_params_file) as f:
         convert_params = yaml.safe_load(f)['velodyne_transform_node']['ros__parameters']
     convert_params['calibration'] = os.path.join(convert_share_dir, 'params', 'VLP16db.yaml')
     velodyne_transform_node = launch_ros.actions.Node(package='velodyne_pointcloud',

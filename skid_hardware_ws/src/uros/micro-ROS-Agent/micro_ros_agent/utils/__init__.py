@@ -16,17 +16,21 @@ import os
 import sys
 import xml.etree.ElementTree
 
-from rosidl_cmake import convert_camel_case_to_lower_case_underscore
-from rosidl_cmake import expand_template
-from rosidl_cmake import get_newest_modification_time
-from rosidl_adapter.parser import parse_message_file
-from rosidl_adapter.parser import parse_service_file
-from rosidl_adapter.parser import validate_field_types
+from rosidl_adapter.parser import (
+    parse_message_file,
+    parse_service_file,
+    validate_field_types,
+)
+from rosidl_cmake import (
+    convert_camel_case_to_lower_case_underscore,
+    expand_template,
+    generate_files,
+    get_newest_modification_time,
+)
 
-from rosidl_cmake import generate_files
 
 def GetPackage(Dir):
-    
+
     # ignore?
     for f in os.listdir(Dir):
         full_path = os.path.join(Dir, f)
@@ -116,7 +120,7 @@ def ReadDefaultXMLs(Path):
 
 
 
-def generate_XML(args):    
+def generate_XML(args):
     pkg_name = args['package_name']
     #known_msg_types = extract_message_types(
     #    pkg_name, args['ros_interface_files'], args.get('ros_interface_dependencies', []))
@@ -141,8 +145,8 @@ def generate_XML(args):
     if not os.path.exists(srcs_dir):
         os.makedirs(srcs_dir)
 
-        
-        
+
+
     # Iterate throw all msgs/srvs
     for idl_file in args['ros_interface_files']:
         extension = os.path.splitext(idl_file)[1]
