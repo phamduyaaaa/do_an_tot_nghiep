@@ -33,6 +33,7 @@ bash run.sh
 ## Project Information
 - **Author:** Pham Duc Duy
 - **Contact:** duypham.robotics@gmail.com
-- **Last updated:** 2026-04-10
+- **Word, PDF and Video** [GGDrive](https://drive.google.com/drive/folders/1paLEONH9nufSKhx4dOYZMqMYwTOj8pQT)
+- **Last updated:** 2026-05-12
 
 
