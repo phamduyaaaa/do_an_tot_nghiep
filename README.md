@@ -33,7 +33,15 @@ bash run.sh
 ## Project Information
 - **Author:** Pham Duc Duy
 - **Contact:** duypham.robotics@gmail.com
-- **Word, PDF and Video** [GGDrive](https://drive.google.com/drive/folders/1paLEONH9nufSKhx4dOYZMqMYwTOj8pQT)
-- **Last updated:** 2026-05-12
+- **Word, PDF and Video**: [GGDrive](https://drive.google.com/drive/folders/1paLEONH9nufSKhx4dOYZMqMYwTOj8pQT)
+- **Youtube**: [IL](https://www.youtube.com/watch?v=j3T55NZ13EA)
+- **Last updated:** 2026-05-12  
+    
+    
+    
+*"Để đạt được kết quả tổng thể này, tôi xin cảm ơn thầy giáo PGS.TS. Nguyễn Anh Tú - người đã dìu dắt và tạo điều kiện cho tôi được học tập và nghiên cứu, sự giúp đỡ rất rất nhiều từ các thành viên trong HaIBotLab dù không góp tên chính thức trong đồ án tốt nghiệp của tôi. Kết thúc 1 hành trình dài 4 năm với nhiều khó khăn, nhưng thật vui khi nhìn lại những gì bản thân tôi lựa chọn và đấu tranh để trở thành một phiên bản tốt hơn từng ngày. Một hành trình mới, một thử thách mới. Tôi cũng hi vọng repo này có thể giúp ích gì đó cho bạn."*  
+  
+*"Một lần nữa cảm ơn tất cả mọi người!"*
+
 
 
