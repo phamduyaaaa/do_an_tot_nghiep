@@ -27,7 +27,7 @@ bash run.sh
 #### If nothing happens after running the scripts, DO NOT assume success.
 #### Please check logs, ports, and device connections.
 ### Inference:
-#### Choose checkpoints/28-11_sanha10T2_slow.pth (This checkpoints can download in [Download checkpoint](https://github.com/phamduyaaaa/do_an_tot_nghiep/releases/tag/sanh_a10_t2_slow_28_11_25)
+#### Choose checkpoints/28-11_sanha10T2_slow.pth (This checkpoints can download in [Download checkpoint](https://github.com/phamduyaaaa/do_an_tot_nghiep/releases/tag/sanh_a10_t2_slow_28_11_25))
 ### TIP:
 #### You can access Streamlit from any device connected to the same Wi-Fi network as your laptop.
 ## Project Information
